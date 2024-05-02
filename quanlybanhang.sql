@@ -195,14 +195,25 @@ call PROC_GETLISTORDERS('C001');
 # 8. Tạo PROCEDURE tạo mới một đơn hàng với các tham số là mã khách hàng, tổng
 # tiền và ngày tạo hoá đơn, và hiển thị ra mã hoá đơn vừa tạo. [3 điểm]
 DELIMITER $$
-create procedure PROC_INSERTORDERS(order_id_in varchar(4), customerId_in varchar(4), total_amount_in double,
-                                   order_date_in date)
+create procedure PROC_INSERTORDERS(customerId_in varchar(4), total_amount_in double,
+                      order_date_in date)
 begin
+    declare last_order_id int;
+    declare order_id_in varchar(4);
+    select cast(substr(order_id, 2, 3) as unsigned) into last_order_id from orders order by order_id desc limit 1;
+    if last_order_id + 1 < 10 then
+        select concat('H', '00', last_order_id + 1) into order_id_in;
+    elseif last_order_id + 1 >= 10 and last_order_id <= 99 then
+        select concat('H', '0', last_order_id + 1) into order_id_in;
+    elseif last_order_id +1 >=100 then
+        select concat('H', last_order_id + 1) into order_id_in;
+    end if;
     insert into orders(order_id, customer_id, order_date, total_amount)
     values (order_id_in, customerId_in, order_date_in, total_amount_in);
     select * from orders where order_id = order_id_in;
 end $$
 DELIMITER ;
+call PROC_INSERTORDERS('C002', 100000, '2023-03-03');
 # 9. Tạo PROCEDURE thống kê số lượng bán ra của mỗi sản phẩm trong khoảng
 # thời gian cụ thể với 2 tham số là ngày bắt đầu và ngày kết thúc. [3 điểm]
 DELIMITER $$
